@@ -19,6 +19,8 @@ import java.util.List;
 
 public class CreativeCommands {
 
+    public static final CommandData DECK_COMMAND_DATA = Commands.slash("deck", "View the rest of your deck in creative mode");
+
     public static final CommandData SET_COMMAND_DATA = Commands.slash("set", "Set a card at a position in creative mode")
             .addOptions(
                     addPowerChoices(new OptionData(OptionType.INTEGER, "power", "The card's base power", true), Deck.POWERS, true),
@@ -114,6 +116,22 @@ public class CreativeCommands {
                 data.game.getPlayer(player).army.clear();
             }
             GameHandler.refreshBoard(event, data);
+        }
+    };
+
+    public static final ListenerAdapter DECK_COMMAND = new ListenerAdapter() {
+
+        @Override
+        public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+            if (!event.getName().equals("deck")) {
+                return;
+            }
+            GameData data = GameCommands.checkGame(event, event.getUser());
+            if (data == null || !data.checkCreative(event)) {
+                return;
+            }
+            Player player = data.getPlayer(event.getUser());
+            GameCommands.sendCardRow(event, player.type, player.deck.cards);
         }
     };
 }

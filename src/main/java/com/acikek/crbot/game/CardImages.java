@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -83,5 +84,16 @@ public class CardImages {
 
     public static byte[] composeImage(int width, int cardWidth, BiConsumer<Graphics2D, Integer> function) {
         return composeImage(width, getCardHeight(cardWidth), cardWidth, function);
+    }
+
+    public static byte[] composeCardRowImage(List<Integer> powers, Map<Integer, Image> cards) {
+        List<Image> cardImages = powers.stream()
+                .map(cards::get)
+                .toList();
+        return CardImages.composeImage(150 + (cardImages.size() - 1) * 50, 150, (g2d, height) -> {
+            for (int i = 0; i < cardImages.size(); i++) {
+                g2d.drawImage(cardImages.get(i), i * 50, 0, 150, height, null);
+            }
+        });
     }
 }

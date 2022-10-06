@@ -34,10 +34,12 @@ public class Player {
         }
     }
 
+    public Type type;
     public Army army = new Army();
     public Deck deck;
 
-    public Player(Random random) {
+    public Player(Type type, Random random) {
+        this.type = type;
         deck = new Deck(random);
     }
 

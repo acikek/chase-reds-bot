@@ -11,8 +11,8 @@ public class Game {
 
     public Random random = new Random();
 
-    public Player black = new Player(random);
-    public Player red = new Player(random);
+    public Player black = new Player(Player.Type.BLACK, random);
+    public Player red = new Player(Player.Type.RED, random);
 
     public Player.Type currentPlayer = Player.Type.SETUP;
     public Turn currentTurn;

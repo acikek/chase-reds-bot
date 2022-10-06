@@ -112,6 +112,9 @@ public class GameData {
     }
 
     public Player getPlayer(User user) {
+        if (black.user.getIdLong() == red.user.getIdLong()) {
+            return game.getPlayer(game.currentPlayer);
+        }
         Player.Type type = user.getIdLong() == black.user.getIdLong()
                 ? Player.Type.BLACK
                 : Player.Type.RED;

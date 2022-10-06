@@ -2,6 +2,7 @@ package com.acikek.crbot.command;
 
 import com.acikek.crbot.ChaseRedsBot;
 import com.acikek.crbot.core.Game;
+import com.acikek.crbot.core.Player;
 import com.acikek.crbot.game.CardImages;
 import com.acikek.crbot.game.GameData;
 import com.acikek.crbot.game.GameHandler;
@@ -63,6 +64,13 @@ public class GameCommands {
         catch (Exception e) {
             return null;
         }
+    }
+
+    public static void sendCardRow(IReplyCallback event, Player.Type type, List<Integer> powers) {
+        Map<Integer, Image> imageMap = CardImages.getImagesForPlayer(type);
+        byte[] image = CardImages.composeCardRowImage(powers, imageMap);
+        FileUpload fileUpload = FileUpload.fromData(image, "deck.png");
+        event.replyFiles(fileUpload).setEphemeral(true).queue();
     }
 
     public static final ListenerAdapter PLAY_COMMAND = new ListenerAdapter() {
@@ -221,17 +229,8 @@ public class GameCommands {
             if (data == null) {
                 return;
             }
-            Map<Integer, Image> imageMap = CardImages.getImagesForPlayer(data.game.currentPlayer);
-            List<Image> cardImages = data.getPlayer(event.getUser()).deck.hand.stream()
-                    .map(imageMap::get)
-                    .toList();
-            byte[] image = CardImages.composeImage(150 + (cardImages.size() - 1) * 50, 150, (g2d, height) -> {
-                for (int i = 0; i < cardImages.size(); i++) {
-                    g2d.drawImage(cardImages.get(i), i * 50, 0, 150, height, null);
-                }
-            });
-            FileUpload fileUpload = FileUpload.fromData(image, "deck.png");
-            event.replyFiles(fileUpload).setEphemeral(true).queue();
+            Player player = data.getPlayer(event.getUser());
+            sendCardRow(event, player.type, player.deck.hand);
         }
     };
 }

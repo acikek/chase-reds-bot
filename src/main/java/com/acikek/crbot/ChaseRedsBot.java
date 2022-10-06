@@ -45,7 +45,8 @@ public class ChaseRedsBot extends ListenerAdapter implements EventListener {
                         GameCommands.REFRESH_COMMAND,
                         GameCommands.HAND_COMMAND,
                         CreativeCommands.SET_COMMAND,
-                        CreativeCommands.CLEAR_COMMAND
+                        CreativeCommands.CLEAR_COMMAND,
+                        CreativeCommands.DECK_COMMAND
                 )
                 .build();
     }
@@ -65,7 +66,8 @@ public class ChaseRedsBot extends ListenerAdapter implements EventListener {
                 GameCommands.REFRESH_COMMAND_DATA,
                 GameCommands.HAND_COMMAND_DATA,
                 CreativeCommands.SET_COMMAND_DATA,
-                CreativeCommands.CLEAR_COMMAND_DATA
+                CreativeCommands.CLEAR_COMMAND_DATA,
+                CreativeCommands.DECK_COMMAND_DATA
         ).complete();
         LOGGER.info("Retrieving 'play' command...");
         for (Command command : commands) {
