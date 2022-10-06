@@ -103,6 +103,7 @@ public class GameHandler extends ListenerAdapter {
         addMenuButtons(reply, data.game);
         data.currentBoard = reply.complete();
         data.inMenu = false;
+        data.pauseValid = false;
     }
 
     public void handlePlaceMenu(ButtonInteractionEvent event, String[] args, Game game, List<Action> actions) {

@@ -19,7 +19,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +60,7 @@ public class GameData {
 
     public Message currentBoard;
     public boolean inMenu;
+    public boolean pauseValid;
 
     public GameData(User black, User red, Game game, boolean creative) {
         try {
@@ -97,6 +97,12 @@ public class GameData {
 
     public void setBoardDisabled(boolean disabled) {
         setButtonsDisabled(currentBoard, disabled);
+    }
+
+    public User getOtherUser(User user) {
+        return user.getIdLong() == black.user.getIdLong()
+                ? red.user
+                : black.user;
     }
 
     public PlayerData getPlayerData(Player.Type type) {

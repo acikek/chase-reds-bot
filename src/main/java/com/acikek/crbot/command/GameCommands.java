@@ -49,6 +49,14 @@ public class GameCommands {
         return data;
     }
 
+    public static boolean checkRequest(IReplyCallback event, User user, String id) {
+        if (!id.equals(user.getId())) {
+            event.reply("This request wasn't for you.").setEphemeral(true).queue();
+            return false;
+        }
+        return true;
+    }
+
     public static boolean checkPlaying(IReplyCallback event, User user) {
         if (ChaseRedsBot.games.containsKey(user)) {
             event.reply("You're already playing a game.").setEphemeral(true).queue();
@@ -127,14 +135,7 @@ public class GameCommands {
                 return;
             }
             String[] args = id.split("_");
-            if (!args[0].equals("accept")) {
-                return;
-            }
-            if (!checkPlaying(event, event.getUser())) {
-                return;
-            }
-            if (!args[1].equals(event.getUser().getId())) {
-                event.reply("This request wasn't for you.").setEphemeral(true).queue();
+            if (!args[0].equals("accept") || !checkPlaying(event, event.getUser()) || !checkRequest(event, event.getUser(), args[1])) {
                 return;
             }
             User user = event.getJDA().retrieveUserById(args[2]).complete();
@@ -170,6 +171,32 @@ public class GameCommands {
             GameData data = checkGame(event, event.getUser());
             if (data == null || !data.checkTurn(event, event.getUser())) {
                 return;
+            }
+            User other = data.getOtherUser(event.getUser());
+            String mention = other.getAsMention() + ", **" + event.getUser().getName() + "** wants to pause the current game.";
+            String note = ":warning: **This will re-shuffle both players' unplaced cards!**";
+            event.reply(mention + "\n" + note)
+                    .addActionRow(Button.success("pause_" + other.getId(), "Accept"))
+                    .queue();
+            data.pauseValid = true;
+        }
+
+        @Override
+        public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+            String id = event.getButton().getId();
+            if (id == null) {
+                return;
+            }
+            String[] args = id.split("_");
+            if (!args[0].equals("pause") || !checkRequest(event, event.getUser(), args[1])) {
+                return;
+            }
+            GameData data = checkGame(event, event.getUser());
+            if (data == null) {
+                return;
+            }
+            if (!data.pauseValid) {
+                event.reply("This pause request has expired.").setEphemeral(true).queue();
             }
             LocalDateTime now = LocalDateTime.now();
             String fileData = data.getFileData(now);
