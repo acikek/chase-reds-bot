@@ -18,9 +18,10 @@ public class Deck {
         cards.addAll(POWERS);
         cards.addAll(POWERS);
         Collections.shuffle(cards, random);
-        for (int i = 0; i < 3; i++) {
-            hand.add(cards.remove(0));
-        }
+    }
+
+    public void initHand() {
+        hand.addAll(draw(3));
     }
 
     public List<Integer> draw(int amount, boolean remove) {

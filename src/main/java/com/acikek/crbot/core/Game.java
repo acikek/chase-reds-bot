@@ -48,8 +48,8 @@ public class Game {
     }
 
     public Action getSetupAction() {
-        List<Integer> powers = black.deck.draw(4);
-        powers.addAll(red.deck.draw(4));
+        List<Integer> powers = black.deck.draw(4, false);
+        powers.addAll(red.deck.draw(4, false));
         return new Action(null, Action.Type.SETUP, new Target(powers));
     }
 
@@ -160,6 +160,14 @@ public class Game {
                 List<List<Integer>> powers = ListUtils.partition(action.target.powers, 4);
                 black.army.loadPowers(powers.get(0));
                 red.army.loadPowers(powers.get(1));
+                for (Integer power : powers.get(0)) {
+                    black.deck.cards.remove(power);
+                }
+                for (Integer power : powers.get(1)) {
+                    red.deck.cards.remove(power);
+                }
+                black.deck.initHand();
+                red.deck.initHand();
                 return ActionResult.CONTINUE;
             }
             case PLACE -> {
@@ -167,7 +175,10 @@ public class Game {
                 if (action.card.type == Card.Type.KING) {
                     hasPlacedKing = true;
                 }
-                current.deck.hand.remove(Integer.valueOf(action.card.placePower()));
+                Integer placePower = action.card.placePower();
+                if (!current.deck.hand.remove(placePower)) {
+                    current.deck.cards.remove(placePower);
+                }
             }
             case MOVE -> {
                 Card existing = current.army.board.get(action.target.position);
