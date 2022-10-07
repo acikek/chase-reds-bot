@@ -231,7 +231,7 @@ public class GameData {
         return true;
     }
 
-    public static void begin(IReplyCallback event, User user, User opponent, boolean creative, String fileData) {
+    public static void begin(IReplyCallback event, User user, User opponent, boolean buildup, boolean creative, String fileData) {
         List<Turn> turns = null;
         if (fileData != null) {
             List<String> lines = Game.getTurnLines(fileData);
@@ -243,7 +243,7 @@ public class GameData {
                     .toList();
         }
         event.deferReply().queue();
-        Game game = new Game(turns);
+        Game game = new Game(turns, buildup);
         GameData data = new GameData(user, opponent != null ? opponent : user, game, creative);
         game.begin();
         var reply = event.getHook().editOriginalAttachments(data.getBoard());

@@ -11,11 +11,11 @@ public class Game {
 
     public Random random = new Random();
 
-    public Player black = new Player(Player.Type.BLACK, random);
-    public Player red = new Player(Player.Type.RED, random);
+    public Player black;
+    public Player red;
 
     public Player.Type currentPlayer = Player.Type.SETUP;
-    public Turn currentTurn;
+    public Turn currentTurn = new Turn();
     public Action lastAction;
     public boolean hasMoved;
     public boolean hasPlacedKing;
@@ -25,7 +25,9 @@ public class Game {
 
     public List<Turn> turns = new ArrayList<>();
 
-    public Game(List<Turn> turns) {
+    public Game(List<Turn> turns, boolean buildup) {
+        black = new Player(Player.Type.BLACK, random, buildup);
+        red = new Player(Player.Type.RED, random, buildup);
         if (turns == null) {
             return;
         }

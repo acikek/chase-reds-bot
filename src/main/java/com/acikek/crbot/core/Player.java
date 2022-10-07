@@ -38,9 +38,9 @@ public class Player {
     public Army army = new Army();
     public Deck deck;
 
-    public Player(Type type, Random random) {
+    public Player(Type type, Random random, boolean buildup) {
         this.type = type;
-        deck = new Deck(random);
+        deck = new Deck(random, buildup);
     }
 
     public boolean isEmpty() {

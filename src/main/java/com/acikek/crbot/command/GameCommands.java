@@ -31,6 +31,7 @@ public class GameCommands {
     public static final CommandData PLAY_COMMAND_DATA = Commands.slash("play", "Play a game of Chase Reds")
             .addOption(OptionType.USER, "opponent", "Your opponent", false)
             .addOption(OptionType.ATTACHMENT, "resume", "The game file to resume", false)
+            .addOption(OptionType.BOOLEAN, "buildup", "Enable buildup mode", false)
             .addOption(OptionType.BOOLEAN, "creative", "Enable creative mode", false);
 
 
@@ -97,6 +98,7 @@ public class GameCommands {
             }
             Message.Attachment resume = event.getOption("resume", OptionMapping::getAsAttachment);
             String resumeData = getAttachmentData(resume);
+            boolean buildup = event.getOption("buildup", false, OptionMapping::getAsBoolean);
             boolean creative = event.getOption("creative", false, OptionMapping::getAsBoolean);
             boolean sameUser = opponent == null || opponent.getIdLong() == event.getUser().getIdLong();
             if (!creative && sameUser) {
@@ -104,20 +106,28 @@ public class GameCommands {
                 return;
             }
             if (sameUser) {
-                GameData.begin(event, event.getUser(), opponent, true, resumeData);
+                GameData.begin(event, event.getUser(), opponent, buildup, true, resumeData);
                 return;
             }
             if (resumeData != null && !GameData.validateFile(event, Game.getTurnLines(resumeData))) {
                 return;
             }
+            Map<String, Boolean> modes = Map.of(
+                    "Buildup", buildup,
+                    "Creative", creative
+            );
+            List<String> settingStrings = modes.entrySet().stream()
+                    .filter(Map.Entry::getValue)
+                    .map(Map.Entry::getKey)
+                    .toList();
+            String settings = !settingStrings.isEmpty()
+                    ? "(" + String.join(", ", settingStrings) + ")"
+                    : "";
             String challenge = opponent.getAsMention() + ", **" + event.getUser().getName() + "** has challenged you to"
-                    + (resumeData != null ? " **resume** " : "")
-                    + "a game of **Chase Reds!**";
-            // TODO: Add buildup mode
-            // TODO: As more modes are added, make this dynamic
-            String settings = creative ? "(Creative)" : "";
+                    + (resumeData != null ? " **resume**" : "")
+                    + " a game of **Chase Reds!**";
             String note = "> *This request is not stored. Ignore this message to deny the challenge.*";
-            String buttonId = "accept_" + opponent.getId() + "_" + event.getUser().getId() + "_" + creative;
+            String buttonId = "accept_" + opponent.getId() + "_" + event.getUser().getId() + "_" + buildup + "_" + creative;
             String hash = resumeData != null ? "\n" + GameData.getFileHashString(resumeData) : "";
             var reply = event
                     .reply(challenge + " " + settings + hash +  "\n" + note)
@@ -141,7 +151,7 @@ public class GameCommands {
             User user = event.getJDA().retrieveUserById(args[2]).complete();
             List<Message.Attachment> attachments = event.getMessage().getAttachments();
             String fileData = attachments.isEmpty() ? null : getAttachmentData(attachments.get(0));
-            GameData.begin(event, event.getUser(), user, args[3].equals("true"), fileData);
+            GameData.begin(event, event.getUser(), user, args[3].equals("true"), args[4].equals("true"), fileData);
         }
     };
 
@@ -197,11 +207,11 @@ public class GameCommands {
             }
             if (!data.pauseValid) {
                 event.reply("This pause request has expired.").setEphemeral(true).queue();
+                return;
             }
             LocalDateTime now = LocalDateTime.now();
             String fileData = data.getFileData(now);
             String hash = GameData.getFileHashString(fileData);
-            // TODO: link command with a snowflake
             event.reply("Game paused! Use " + ChaseRedsBot.playCommandMention + " and link this attachment to continue.\n" + hash)
                     .addFiles(FileUpload.fromData(fileData.getBytes(StandardCharsets.UTF_8), data.getFilename(now)))
                     .queue();
