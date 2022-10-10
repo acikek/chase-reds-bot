@@ -2,6 +2,7 @@ package com.acikek.crbot;
 
 import com.acikek.crbot.command.CreativeCommands;
 import com.acikek.crbot.command.GameCommands;
+import com.acikek.crbot.command.GuideCommand;
 import com.acikek.crbot.game.CardImages;
 import com.acikek.crbot.game.GameData;
 import com.acikek.crbot.game.GameHandler;
@@ -16,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.login.LoginException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,13 +30,13 @@ public class ChaseRedsBot extends ListenerAdapter implements EventListener {
 
     public static String playCommandMention;
 
-    public static void main(String[] args) throws LoginException {
+    public static void main(String[] args) {
         LOGGER.info("Creating card images...");
         CardImages.blackCards = CardImages.getCardImages("b");
         CardImages.redCards = CardImages.getCardImages("r");
         LOGGER.info("Building bot...");
         JDABuilder.createDefault(args[0])
-                .addEventListeners(new ChaseRedsBot(), new GameHandler())
+                .addEventListeners(new ChaseRedsBot(), new GameHandler(), new GuideCommand())
                 .addEventListeners(
                         GameCommands.PLAY_COMMAND,
                         GameCommands.LEAVE_COMMAND,
@@ -67,7 +67,8 @@ public class ChaseRedsBot extends ListenerAdapter implements EventListener {
                 GameCommands.HAND_COMMAND_DATA,
                 CreativeCommands.SET_COMMAND_DATA,
                 CreativeCommands.CLEAR_COMMAND_DATA,
-                CreativeCommands.DECK_COMMAND_DATA
+                CreativeCommands.DECK_COMMAND_DATA,
+                GuideCommand.COMMAND_DATA
         ).complete();
         LOGGER.info("Retrieving 'play' command...");
         for (Command command : commands) {
