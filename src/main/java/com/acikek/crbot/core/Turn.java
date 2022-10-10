@@ -53,6 +53,11 @@ public class Turn {
     }
 
     public static Turn parse(String string) {
+        if (string.equals("-")) {
+            Turn turn = new Turn();
+            turn.addAction(Action.PASS);
+            return turn;
+        }
         if (string.matches("[\\dJQKA]+")) {
             return parseSetupTurn(string);
         }

@@ -2,20 +2,16 @@ package com.acikek.crbot.game;
 
 import com.acikek.crbot.ChaseRedsBot;
 import com.acikek.crbot.core.*;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
-import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import org.apache.commons.collections4.ListUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -37,9 +33,28 @@ public class GameHandler extends ListenerAdapter {
         };
     }
 
+    public static String getPositionName(Position position) {
+        return switch (position) {
+            case LEFT -> "Left";
+            case CENTER -> "Center";
+            case RIGHT -> "Right";
+            case FALLBACK -> "Fallback";
+        };
+    }
+
+    public static String getRoyalName(String character) {
+        return switch (character) {
+            case "J" -> "Jack";
+            case "Q" -> "Queen";
+            case "K" -> "King";
+            case "A" -> "Ace";
+            default -> character;
+        };
+    }
+
     public static String cardToReadableString(Card card) {
-        String powerString = Card.getCharacter(card.power) + (card.servant > 0 ? " with " + card.servant : "");
-        return powerString + " at " + card.position;
+        String powerString = getRoyalName(Card.getCharacter(card.power)) + (card.servant > 0 ? " with " + card.servant : "");
+        return powerString + " at " + getPositionName(card.position);
     }
 
     public static void addButtons(MessageRequest<?> reply, List<Button> buttons, boolean cancel) {
@@ -113,9 +128,8 @@ public class GameHandler extends ListenerAdapter {
                     .distinct()
                     .filter(action -> action.card.placePower() == power)
                     .toList();
-            System.out.println(placeActions.stream().map(Action::toTurnString).toList());
             var reply = event.reply("Where do you want to place it?");
-            addActionButtons(reply, placeActions, action -> action.target.position.toString());
+            addActionButtons(reply, placeActions, action -> getPositionName(action.target.position));
             reply = reply.setEphemeral(true);
             reply.complete();
             return;
@@ -124,6 +138,7 @@ public class GameHandler extends ListenerAdapter {
                 .distinct()
                 .filter(power -> actions.stream().anyMatch(action -> action.card.placePower() == power))
                 .map(Card::getCharacter)
+                .map(GameHandler::getRoyalName)
                 .toList();
         var reply = event.reply("Choose a card from your hand.");
         reply = reply.setEphemeral(true);
@@ -174,11 +189,10 @@ public class GameHandler extends ListenerAdapter {
             List<Position> servePositions = Action.filterByType(cardActions, List.of(Action.Type.SERVE)).stream()
                     .map(action -> action.target.position)
                     .toList();
-            System.out.println(servePositions);
             List<Button> buttons = moves.stream()
                     .map(move -> servePositions.contains(move.target.position)
                             ? Button.primary("game_menu_move_" + move.card.position + "_" + move.target.position, move.target.position.toString())
-                            : getActionButton(move, action -> action.target.position.toString()))
+                            : getActionButton(move, action -> getPositionName(action.target.position)))
                     .toList();
             var reply = event.reply("Where do you want to move it?");
             addButtons(reply, buttons, true);
@@ -223,7 +237,6 @@ public class GameHandler extends ListenerAdapter {
         if (!data.checkTurn(event, event.getUser())) {
             return;
         }
-        System.out.println(Arrays.toString(args));
         switch (args[0]) {
             case "cancel" -> {
                 event.reply("Action cancelled.")
@@ -235,14 +248,12 @@ public class GameHandler extends ListenerAdapter {
             }
             case "menu" -> {
                 List<Action> availableActions = data.game.getAvailableActions();
-                System.out.println(availableActions.stream().map(Action::toTurnString).toList());
                 Action.Type type = Action.Type.valueOf(args[1].toUpperCase());
                 List<Action.Type> types = new ArrayList<>(List.of(type));
                 if (type == Action.Type.MOVE) {
                     types.add(Action.Type.SERVE);
                 }
                 List<Action> actions = Action.filterByType(availableActions, types);
-                System.out.println(actions.stream().map(Action::toTurnString).toList());
                 switch (type) {
                     case PLACE -> handlePlaceMenu(event, args, data.game, actions);
                     case MOVE -> handleMoveMenu(event, args, data.game, actions);
@@ -256,7 +267,8 @@ public class GameHandler extends ListenerAdapter {
                 Action action = Action.parseTurnString(args[1]);
                 Game.ActionResult result = data.game.submitAction(action);
                 if (result != Game.ActionResult.CONTINUE && result != Game.ActionResult.END_TURN) {
-                    data.end(event, result);
+                    data.game.turns.add(data.game.currentTurn);
+                    data.end(event, data.getPlayerData(data.game.getWinningPlayer(result)).user());
                     GameData.remove(data);
                     return;
                 }

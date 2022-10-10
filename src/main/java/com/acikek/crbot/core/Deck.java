@@ -24,7 +24,6 @@ public class Deck {
         cards.addAll(POWERS);
         cards.addAll(POWERS);
         Collections.shuffle(cards, random);
-        System.out.println(cards);
         if (buildup) {
             for (int i = 0; i < cards.size() / 2; i++) {
                 int power = cards.get(i);
@@ -32,9 +31,6 @@ public class Deck {
                     continue;
                 }
                 double area = BUILDUP_MAP.get(power);
-                System.out.println(power);
-                System.out.println(area);
-                System.out.println((double) i / cards.size());
                 if ((double) i / cards.size() <= area) {
                     cards.remove(i);
                     int index = ThreadLocalRandom.current().nextInt((int) (cards.size() * area), cards.size());
@@ -43,7 +39,6 @@ public class Deck {
                 }
             }
         }
-        System.out.println(cards);
     }
 
     public void initHand() {
@@ -53,6 +48,9 @@ public class Deck {
     public List<Integer> draw(int amount, boolean remove) {
         List<Integer> result = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
+            if (cards.isEmpty()) {
+                break;
+            }
             result.add(remove ? cards.remove(0) : cards.get(i));
         }
         return result;

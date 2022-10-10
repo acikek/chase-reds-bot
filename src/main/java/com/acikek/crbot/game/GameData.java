@@ -62,8 +62,11 @@ public class GameData {
     public boolean inMenu;
     public boolean pauseValid;
 
-    public GameData(User black, User red, Game game, boolean creative) {
+    public GameData(User user, User opponent, Game game, boolean creative) {
         try {
+            boolean flipped = game.currentPlayer == Player.Type.RED;
+            User black = flipped ? opponent : user;
+            User red = flipped ? user : opponent;
             this.black = new PlayerData(black, getCircleAvatar(ImageIO.read(black.getEffectiveAvatar().download().get()), Color.BLACK));
             this.red = new PlayerData(red, getCircleAvatar(ImageIO.read(red.getEffectiveAvatar().download().get()), Color.RED));
         } catch (Exception e) {
@@ -249,14 +252,14 @@ public class GameData {
         var reply = event.getHook().editOriginalAttachments(data.getBoard());
         GameHandler.addMenuButtons(reply, game);
         data.currentBoard = reply.complete();
-        ChaseRedsBot.games.put(event.getUser(), data);
+        ChaseRedsBot.games.put(user, data);
         ChaseRedsBot.games.put(opponent, data);
     }
 
-    public String getEndMessage(Player.Type winningPlayer) {
+    public String getEndMessage(User winningPlayer) {
         return winningPlayer == null
                 ? "**STALEMATE!** The game ends in a tie!"
-                : "**" + getPlayerData(winningPlayer).user.getName().toUpperCase() + " WINS!**";
+                : "**" + winningPlayer.getName().toUpperCase() + " WINS!**";
     }
 
     public String getFilename(LocalDateTime now) {
@@ -284,8 +287,7 @@ public class GameData {
         }
     }
 
-    public void end(IReplyCallback event, Game.ActionResult result) {
-        Player.Type winningPlayer = game.getWinningPlayer(result);
+    public void end(IReplyCallback event, User winningPlayer) {
         String message = getEndMessage(winningPlayer);
         LocalDateTime now = LocalDateTime.now();
         event.reply(message + "\n*" + QUOTES[game.random.nextInt(QUOTES.length)] + "*")

@@ -58,9 +58,9 @@ public class GameCommands {
         return true;
     }
 
-    public static boolean checkPlaying(IReplyCallback event, User user) {
+    public static boolean checkPlaying(IReplyCallback event, User user, boolean other) {
         if (ChaseRedsBot.games.containsKey(user)) {
-            event.reply("You're already playing a game.").setEphemeral(true).queue();
+            event.reply((other ? "This user is" : "You're") + " already playing a game.").setEphemeral(true).queue();
             return false;
         }
         return true;
@@ -89,7 +89,7 @@ public class GameCommands {
             if (!event.getName().equals("play")) {
                 return;
             }
-            if (!checkPlaying(event, event.getUser())) {
+            if (!checkPlaying(event, event.getUser(), false)) {
                 return;
             }
             User opponent = event.getOption("opponent", OptionMapping::getAsUser);
@@ -145,13 +145,16 @@ public class GameCommands {
                 return;
             }
             String[] args = id.split("_");
-            if (!args[0].equals("accept") || !checkPlaying(event, event.getUser()) || !checkRequest(event, event.getUser(), args[1])) {
+            if (!args[0].equals("accept") || !checkPlaying(event, event.getUser(), false) || !checkRequest(event, event.getUser(), args[1])) {
                 return;
             }
             User user = event.getJDA().retrieveUserById(args[2]).complete();
+            if (!checkPlaying(event, user, true)) {
+                return;
+            }
             List<Message.Attachment> attachments = event.getMessage().getAttachments();
             String fileData = attachments.isEmpty() ? null : getAttachmentData(attachments.get(0));
-            GameData.begin(event, event.getUser(), user, args[3].equals("true"), args[4].equals("true"), fileData);
+            GameData.begin(event, user, event.getUser(), args[3].equals("true"), args[4].equals("true"), fileData);
         }
     };
 
@@ -166,7 +169,7 @@ public class GameCommands {
             if (data == null) {
                 return;
             }
-            data.end(event, Game.ActionResult.LOSE);
+            data.end(event, data.getOtherUser(event.getUser()));
             GameData.remove(data);
         }
     };
